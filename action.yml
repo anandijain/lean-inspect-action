@@ -13,7 +13,7 @@ runs:
     - name: Install lean-inspect
       shell: bash
       run: |
-        uv tool install git+https://github.com/<your-org>/lean_inspect.git@v1
+        uv tool install git+https://github.com/anandijain/lean_inspect.git@v1
 
     - name: Generate traces (JSON + HTML)
       shell: bash
