@@ -1,0 +1,49 @@
+name: Lean Inspect
+description: Generate Lean goal traces and inject trace links into doc-gen output
+author: you
+runs:
+  using: "composite"
+  steps:
+    - name: Install uv
+      shell: bash
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin:$HOME/.local/bin" >> "$GITHUB_PATH"
+
+    - name: Install lean-inspect
+      shell: bash
+      run: |
+        uv tool install git+https://github.com/<your-org>/lean_inspect.git@v1
+
+    - name: Generate traces (JSON + HTML)
+      shell: bash
+      run: |
+        set -euo pipefail
+        uv run lean-inspect trace-project "${{ inputs.project-root }}" \
+          --out-dir "${{ inputs.trace-dir }}" \
+          --mode adaptive \
+          --html \
+          --progress
+
+    - name: Inject trace links into doc-gen HTML
+      shell: bash
+      run: |
+        set -euo pipefail
+        uv run lean-inspect inject-doc "${{ inputs.doc-root }}" \
+          "${{ inputs.project-root }}" \
+          "${{ inputs.trace-dir }}" \
+          --progress
+
+inputs:
+  project-root:
+    description: Path to Lean project root (contains the .lean files)
+    required: false
+    default: .
+  doc-root:
+    description: Path to doc-gen output root (e.g. docbuild/.lake/build/doc)
+    required: false
+    default: docbuild/.lake/build/doc
+  trace-dir:
+    description: Where to write traces (JSON/HTML)
+    required: false
+    default: .lean-inspect-traces
