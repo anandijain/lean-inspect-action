@@ -1,6 +1,6 @@
 name: Lean Inspect
 description: Generate Lean goal traces and inject trace links into doc-gen output
-author: you
+author: Anand Jain
 runs:
   using: "composite"
   steps:
@@ -19,9 +19,10 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
+        mode="${{ inputs.trace-mode }}"
         uv run lean-inspect trace-project "${{ inputs.project-root }}" \
           --out-dir "${{ inputs.trace-dir }}" \
-          --mode adaptive \
+          --mode "${mode}" \
           --html \
           --progress
 
@@ -29,10 +30,15 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
+        debug_flag=""
+        if [ "${{ inputs.inject-debug }}" = "true" ]; then
+          debug_flag="--debug"
+        fi
         uv run lean-inspect inject-doc "${{ inputs.doc-root }}" \
           "${{ inputs.project-root }}" \
           "${{ inputs.trace-dir }}" \
-          --progress
+          --progress \
+          ${debug_flag}
 
 inputs:
   project-root:
@@ -47,3 +53,11 @@ inputs:
     description: Where to write traces (JSON/HTML)
     required: false
     default: .lean-inspect-traces
+  trace-mode:
+    description: Mode for trace generation (adaptive or dense)
+    required: false
+    default: dense
+  inject-debug:
+    description: Enable debug logging when injecting docs (true/false)
+    required: false
+    default: true
